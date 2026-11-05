@@ -8,6 +8,8 @@ Created on Fri Nov  7 13:51:06 2025
 import pandas as pd
 from PySide6.QtCore import QAbstractTableModel, Qt
 
+REQUIRED_COLUMNS = ["Frame", "F/F0"]
+
 
 class PandasModel(QAbstractTableModel):
     """Table model for hosting pandas dataframes in a Qt view.
@@ -112,8 +114,20 @@ def load_data(data_path):
     Returns:
     --------
         pd.DataFrame: A DataFrame with the columns "Frame" and "F/F0".
-    """
-    col_names = ["Frame", "F/F0"]
-    data = pd.read_excel(data_path, usecols=col_names)
 
-    return data
+    Raises:
+    -------
+        ValueError: If a required column is missing.
+        OSError: If the file cannot be opened.
+    """
+    data = pd.read_excel(data_path)
+
+    missing = [col for col in REQUIRED_COLUMNS if col not in data.columns]
+    if missing:
+        raise ValueError(
+            "The file must contain at least the columns: "
+            f"{', '.join(REQUIRED_COLUMNS)}.\n"
+            f"Missing: {', '.join(missing)}."
+        )
+
+    return data[REQUIRED_COLUMNS]

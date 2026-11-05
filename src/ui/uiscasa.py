@@ -125,7 +125,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
                 break
 
     def open_raw_data(self):
-        """ "Open a file dialog, then load and display the selected data.
+        """Open a file dialog, then load and display the selected data.
 
         The dialog starts in the current working directory. Does nothing if
         the dialog is cancelled.
@@ -145,7 +145,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         """Load a data file and display its content.
 
         Fills the table view and updates the file name, mean and standard
-        deviation labels. A warning is shown if the file cannot be loaded.
+        deviation labels. A warning is shown if the file cannot be read or
+        does not contain the required columns.
 
         Args:
         -----
@@ -153,15 +154,11 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         """
         try:
             data = pandasm.load_data(path)
-            signal = data["F/F0"].values
-        except Exception:
-            QMessageBox.warning(
-                self,
-                "Error",
-                "Unable to load the file.\nThe file must contain at least the "
-                "columns: Frame and F/F0.",
-            )
+        except (ValueError, OSError) as exc:
+            QMessageBox.critical(self, "Error", str(exc))
             return
+
+        signal = data["F/F0"].values
 
         self.raw_data = data
         self.unprocessed_model = pandasm.PandasModel(self.raw_data)
