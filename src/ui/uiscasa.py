@@ -119,18 +119,35 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         """
         for url in event.mimeData().urls():
             if self._is_xlsx(url):
-                self.open_dropped_data(url.toLocalFile())
+                self._load_file(url.toLocalFile())
                 break
 
-    def open_dropped_data(self, path):
-        """Load a file dropped on the window and display its content.
+    def open_raw_data(self):
+        """ "Open a file dialog, then load and display the selected data.
+
+        The dialog starts in the current working directory. Does nothing if
+        the dialog is cancelled.
+        """
+        start_dir = os.getcwd()
+        data_path, _ = QFileDialog.getOpenFileName(
+            parent=self,
+            caption="Select your file",
+            dir=start_dir,
+            filter="Calcium(*.xlsx);;All files(*)",
+        )
+
+        if data_path:
+            self._load_file(data_path)
+
+    def _load_file(self, path):
+        """Load a data file and display its content.
 
         Fills the table view and updates the file name, mean and standard
         deviation labels. A warning is shown if the file cannot be loaded.
 
         Args:
         -----
-            path (str): Path to the dropped .xlsx file.
+            path (str): Path to the .xlsx file.
         """
         try:
             data = pandasm.load_data(path)
@@ -166,41 +183,6 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             f"<b>Signal standard deviation =</b> {self.std_signal:.3f} "
             f"(exact value: {self.std_signal:.10f})"
         )
-
-    def open_raw_data(self):
-        """Open a file dialog, then load and display the selected data.
-
-        The dialog starts in the current working directory. Fills the table
-        view and updates the file name, mean and standard deviation labels.
-        Does nothing if the dialog is cancelled.
-        """
-        start_dir = os.getcwd()
-        data_path, _ = QFileDialog.getOpenFileName(
-            parent=self,
-            caption="Select your file",
-            dir=start_dir,
-            filter="Calcium(*.xlsx);;All files(*)",
-        )
-
-        if data_path:
-            self.raw_data = pandasm.load_data(data_path)
-            self.unprocessed_model = pandasm.PandasModel(self.raw_data)
-            self.tableView.setModel(self.unprocessed_model)
-
-            self.fileNameLabel.setText(
-                f"<b>Loaded file:</b> {os.path.basename(data_path)}"
-            )
-
-            self.mean_signal = np.mean(self.raw_data["F/F0"].values)
-            self.std_signal = np.std(self.raw_data["F/F0"].values)
-            self.meanSignalLabel.setText(
-                f"<b>Signal mean =</b> {self.mean_signal:.3f} "
-                f"(exact value: {self.mean_signal:.10f})"
-            )
-            self.stdSignalLabel.setText(
-                f"<b>Signal standard deviation =</b> {self.std_signal:.3f} "
-                f"(exact value: {self.std_signal:.10f})"
-            )
 
     def set_height_value(self):
         """Set the height argument to the signal mean + standard deviation."""
