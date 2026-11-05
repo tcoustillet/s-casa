@@ -87,6 +87,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
     @staticmethod
     def _set_silently(widget, value):
         """Set a widget value without emitting its signals."""
+        if isinstance(widget.value(), int):
+            value = round(value)
         widget.blockSignals(True)
         widget.setValue(value)
         widget.blockSignals(False)
