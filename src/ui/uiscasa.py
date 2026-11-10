@@ -69,6 +69,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         self.detrendCheckBox.toggled.connect(self.plot_data)
         self.detrendComboBox.currentIndexChanged.connect(self.plot_data)
         self.prominenceCheckBox.toggled.connect(self.plot_data)
+        self._update_parameter_labels()
 
     def _update_frame_count_label(self):
         """Display the number of frames (rows) of the loaded data."""
@@ -99,7 +100,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         )
 
     def _connect_parameter_controls(self):
-        """Synchronize sliders and spin boxes."""
+        """Synchronize sliders, spin boxes and labels."""
 
         parameter_pairs = (
             (self.heightSlider, self.heightDoubleSpinBox, 1000),
@@ -122,6 +123,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
                 )
             )
 
+            slider.valueChanged.connect(self._update_parameter_labels)
+            spinbox.valueChanged.connect(self._update_parameter_labels)
             slider.valueChanged.connect(self.plot_data)
             spinbox.valueChanged.connect(self.plot_data)
 
@@ -249,6 +252,16 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             "width": self.widthDoubleSpinBox.value(),
         }
 
+    def _update_parameter_labels(self):
+        """Display the current detection parameters next to their controls."""
+        params = self._get_current_parameters()
+
+        self.heightValue.setText(f"{params['height']:.3f}")
+        self.thresholdValue.setText(f"{params['threshold']:.3f}")
+        self.distanceValue.setText(f"{params['distance']}")
+        self.prominenceValue.setText(f"{params['prominence']:.3f}")
+        self.widthValue.setText(f"{params['width']:.3f}")
+
     def _get_signal(self):
         """Return the signal, detrended if requested (original mean kept)."""
         signal = self.raw_data["F/F0"].values
@@ -273,12 +286,6 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
 
         # Retrieve detection parameters.
         params = self._get_current_parameters()
-
-        self.heightValue.setText(f"{params['height']:.3f}")
-        self.thresholdValue.setText(f"{params['threshold']:.3f}")
-        self.distanceValue.setText(f"{params['distance']}")
-        self.prominenceValue.setText(f"{params['prominence']:.3f}")
-        self.widthValue.setText(f"{params['width']:.3f}")
 
         if self.raw_data is None:
             return
