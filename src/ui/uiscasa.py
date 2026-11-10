@@ -44,7 +44,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         self.browseButton.clicked.connect(self.open_raw_data)
 
         self.plotprocessedWidget.setBackground("w")
-        self.plotButton.clicked.connect(self.plot_data)
+        self.plotButton.clicked.connect(self.refresh)
 
         # Enable drag and drop.
         self.setAcceptDrops(True)
@@ -66,9 +66,9 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
 
         # Connect additional controls.
         self.setHeightPushButton.clicked.connect(self.set_height_value)
-        self.detrendCheckBox.toggled.connect(self.plot_data)
-        self.detrendComboBox.currentIndexChanged.connect(self.plot_data)
-        self.prominenceCheckBox.toggled.connect(self.plot_data)
+        self.detrendCheckBox.toggled.connect(self.refresh)
+        self.detrendComboBox.currentIndexChanged.connect(self.refresh)
+        self.prominenceCheckBox.toggled.connect(self.refresh)
         self._update_parameter_labels()
 
     def _update_frame_count_label(self):
@@ -88,6 +88,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
     def _on_frame_interval_changed(self):
         """Recompute the total signal duration."""
         self._update_signal_duration()
+        self.update_signal_statistics()
 
     def _update_signal_duration(self):
         """Update duration label (number of frames x frame interval / 1000)."""
@@ -125,8 +126,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
 
             slider.valueChanged.connect(self._update_parameter_labels)
             spinbox.valueChanged.connect(self._update_parameter_labels)
-            slider.valueChanged.connect(self.plot_data)
-            spinbox.valueChanged.connect(self.plot_data)
+            slider.valueChanged.connect(self.refresh)
+            spinbox.valueChanged.connect(self.refresh)
 
     @staticmethod
     def _set_silently(widget, value):
@@ -307,12 +308,29 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             **params,
         )
 
-        # Update amplitude and frequency labels.
+    def refresh(self):
+        """Update both the plot and the amplitude/frequency labels."""
+        self.plot_data()
+        self.update_signal_statistics()
+
+    def update_signal_statistics(self):
+        """Update the mean amplitude and frequency labels.
+
+        Values are only displayed if prominence display is enabled and at
+        least one peak was detected.
+        """
+        if self.raw_data is None:
+            return
+
+        top_peaks, properties = find_peaks(
+            x=self._get_signal(), **self._get_current_parameters()
+        )
         prominences = properties["prominences"]
-        if show_prominence and len(prominences) > 0:
+
+        if self.prominenceCheckBox.isChecked() and len(prominences) > 0:
             self.amplitudeLabel.setText(
-                f"Mean amplitude = {np.mean(properties['prominences']):.3g} ± "
-                f"{np.std(properties['prominences']):.3g}"
+                f"Mean amplitude = {np.mean(prominences):.3g} ± "
+                f"{np.std(prominences):.3g}"
             )
             self.frequenceLabel.setText(
                 f"Frequency = {len(top_peaks) / self.signal_duration:.3g} Hz "
