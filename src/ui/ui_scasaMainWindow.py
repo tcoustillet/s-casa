@@ -17,9 +17,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDoubleSpinBox,
     QFrame, QGridLayout, QHBoxLayout, QHeaderView,
-    QLabel, QMainWindow, QMenuBar, QPushButton,
-    QSizePolicy, QSlider, QSpacerItem, QSpinBox,
-    QStatusBar, QTableView, QVBoxLayout, QWidget)
+    QLabel, QLineEdit, QMainWindow, QMenuBar,
+    QPushButton, QSizePolicy, QSlider, QSpacerItem,
+    QSpinBox, QStatusBar, QTableView, QVBoxLayout,
+    QWidget)
 
 from pyqtgraph import PlotWidget
 
@@ -27,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1139, 776)
+        MainWindow.resize(1182, 776)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_5 = QVBoxLayout(self.centralwidget)
@@ -51,6 +52,12 @@ class Ui_MainWindow(object):
 
         self.tableView = QTableView(self.centralwidget)
         self.tableView.setObjectName(u"tableView")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.tableView.sizePolicy().hasHeightForWidth())
+        self.tableView.setSizePolicy(sizePolicy1)
+        self.tableView.setMinimumSize(QSize(180, 0))
 
         self.verticalLayout.addWidget(self.tableView)
 
@@ -62,13 +69,62 @@ class Ui_MainWindow(object):
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
         self.horizontalLayout.setContentsMargins(50, -1, -1, -1)
+        self.verticalLayout_7 = QVBoxLayout()
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.fileNameLabel = QLabel(self.centralwidget)
         self.fileNameLabel.setObjectName(u"fileNameLabel")
         font = QFont()
         font.setBold(False)
         self.fileNameLabel.setFont(font)
 
-        self.horizontalLayout.addWidget(self.fileNameLabel)
+        self.horizontalLayout_5.addWidget(self.fileNameLabel)
+
+
+        self.verticalLayout_7.addLayout(self.horizontalLayout_5)
+
+        self.gridLayout_2 = QGridLayout()
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setVerticalSpacing(-1)
+        self.gridLayout_2.setContentsMargins(-1, 40, -1, 15)
+        self.frameCountValue = QLabel(self.centralwidget)
+        self.frameCountValue.setObjectName(u"frameCountValue")
+
+        self.gridLayout_2.addWidget(self.frameCountValue, 0, 1, 1, 1)
+
+        self.frameIntervalLabel = QLabel(self.centralwidget)
+        self.frameIntervalLabel.setObjectName(u"frameIntervalLabel")
+        font1 = QFont()
+        font1.setUnderline(True)
+        self.frameIntervalLabel.setFont(font1)
+
+        self.gridLayout_2.addWidget(self.frameIntervalLabel, 1, 0, 1, 1)
+
+        self.frameCountLabel = QLabel(self.centralwidget)
+        self.frameCountLabel.setObjectName(u"frameCountLabel")
+        self.frameCountLabel.setFont(font1)
+
+        self.gridLayout_2.addWidget(self.frameCountLabel, 0, 0, 1, 1)
+
+        self.frameIntervalLineEdit = QLineEdit(self.centralwidget)
+        self.frameIntervalLineEdit.setObjectName(u"frameIntervalLineEdit")
+        sizePolicy.setHeightForWidth(self.frameIntervalLineEdit.sizePolicy().hasHeightForWidth())
+        self.frameIntervalLineEdit.setSizePolicy(sizePolicy)
+        self.frameIntervalLineEdit.setMaximumSize(QSize(75, 16777215))
+        self.frameIntervalLineEdit.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+
+        self.gridLayout_2.addWidget(self.frameIntervalLineEdit, 1, 1, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 2, 1, 1)
+
+
+        self.verticalLayout_7.addLayout(self.gridLayout_2)
+
+
+        self.horizontalLayout.addLayout(self.verticalLayout_7)
 
         self.line = QFrame(self.centralwidget)
         self.line.setObjectName(u"line")
@@ -79,7 +135,20 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6 = QVBoxLayout()
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.verticalLayout_6.setContentsMargins(-1, 70, -1, 70)
+        self.verticalLayout_6.setContentsMargins(-1, 70, 20, 70)
+        self.label = QLabel(self.centralwidget)
+        self.label.setObjectName(u"label")
+        font2 = QFont()
+        font2.setPointSize(14)
+        font2.setUnderline(True)
+        self.label.setFont(font2)
+
+        self.verticalLayout_6.addWidget(self.label)
+
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayout_6.addItem(self.verticalSpacer_3)
+
         self.meanSignalLabel = QLabel(self.centralwidget)
         self.meanSignalLabel.setObjectName(u"meanSignalLabel")
         self.meanSignalLabel.setFont(font)
@@ -92,9 +161,21 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_6.addWidget(self.stdSignalLabel)
 
+        self.durationSignalLabel = QLabel(self.centralwidget)
+        self.durationSignalLabel.setObjectName(u"durationSignalLabel")
+        self.durationSignalLabel.setFont(font)
+
+        self.verticalLayout_6.addWidget(self.durationSignalLabel)
+
 
         self.horizontalLayout.addLayout(self.verticalLayout_6)
 
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout.addItem(self.horizontalSpacer_3)
+
+        self.horizontalLayout.setStretch(0, 1)
+        self.horizontalLayout.setStretch(3, 1)
 
         self.verticalLayout_3.addLayout(self.horizontalLayout)
 
@@ -169,9 +250,9 @@ class Ui_MainWindow(object):
 
         self.distanceLabel = QLabel(self.centralwidget)
         self.distanceLabel.setObjectName(u"distanceLabel")
-        font1 = QFont()
-        font1.setBold(True)
-        self.distanceLabel.setFont(font1)
+        font3 = QFont()
+        font3.setBold(True)
+        self.distanceLabel.setFont(font3)
         self.distanceLabel.setStyleSheet(u"color: \"#d62728\";")
 
         self.gridLayout.addWidget(self.distanceLabel, 3, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
@@ -196,7 +277,7 @@ class Ui_MainWindow(object):
 
         self.heightLabel = QLabel(self.centralwidget)
         self.heightLabel.setObjectName(u"heightLabel")
-        self.heightLabel.setFont(font1)
+        self.heightLabel.setFont(font3)
         self.heightLabel.setStyleSheet(u"color: \"#1f77b4\";")
 
         self.gridLayout.addWidget(self.heightLabel, 1, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
@@ -212,7 +293,7 @@ class Ui_MainWindow(object):
 
         self.thresholdLabel = QLabel(self.centralwidget)
         self.thresholdLabel.setObjectName(u"thresholdLabel")
-        self.thresholdLabel.setFont(font1)
+        self.thresholdLabel.setFont(font3)
         self.thresholdLabel.setStyleSheet(u"color: \"#2ca02c\";")
 
         self.gridLayout.addWidget(self.thresholdLabel, 2, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
@@ -235,7 +316,7 @@ class Ui_MainWindow(object):
 
         self.prominenceLabel = QLabel(self.centralwidget)
         self.prominenceLabel.setObjectName(u"prominenceLabel")
-        self.prominenceLabel.setFont(font1)
+        self.prominenceLabel.setFont(font3)
         self.prominenceLabel.setStyleSheet(u"color: \"#ff7f0e\"")
 
         self.gridLayout.addWidget(self.prominenceLabel, 4, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
@@ -266,7 +347,7 @@ class Ui_MainWindow(object):
 
         self.widthLabel = QLabel(self.centralwidget)
         self.widthLabel.setObjectName(u"widthLabel")
-        self.widthLabel.setFont(font1)
+        self.widthLabel.setFont(font3)
         self.widthLabel.setStyleSheet(u"color: \"#9467bd\"")
 
         self.gridLayout.addWidget(self.widthLabel, 5, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
@@ -330,10 +411,10 @@ class Ui_MainWindow(object):
 
         self.resultsLabel = QLabel(self.centralwidget)
         self.resultsLabel.setObjectName(u"resultsLabel")
-        font2 = QFont()
-        font2.setBold(True)
-        font2.setUnderline(True)
-        self.resultsLabel.setFont(font2)
+        font4 = QFont()
+        font4.setBold(True)
+        font4.setUnderline(True)
+        self.resultsLabel.setFont(font4)
 
         self.verticalLayout_2.addWidget(self.resultsLabel, 0, Qt.AlignmentFlag.AlignHCenter|Qt.AlignmentFlag.AlignVCenter)
 
@@ -363,9 +444,6 @@ class Ui_MainWindow(object):
 
         self.plotprocessedWidget = PlotWidget(self.centralwidget)
         self.plotprocessedWidget.setObjectName(u"plotprocessedWidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.plotprocessedWidget.sizePolicy().hasHeightForWidth())
         self.plotprocessedWidget.setSizePolicy(sizePolicy1)
         self.plotprocessedWidget.setMinimumSize(QSize(0, 222))
@@ -378,7 +456,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1139, 24))
+        self.menubar.setGeometry(QRect(0, 0, 1182, 24))
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -393,8 +471,14 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"S-CaSa: A Standardized method for Calcium Signal Analysis ", None))
         self.browseButton.setText(QCoreApplication.translate("MainWindow", u"Browse", None))
         self.fileNameLabel.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:700;\">Loaded file: </span>????</p></body></html>", None))
+        self.frameCountValue.setText(QCoreApplication.translate("MainWindow", u"-", None))
+        self.frameIntervalLabel.setText(QCoreApplication.translate("MainWindow", u"Frame interval (ms):", None))
+        self.frameCountLabel.setText(QCoreApplication.translate("MainWindow", u"Number of detected frames:", None))
+        self.frameIntervalLineEdit.setText(QCoreApplication.translate("MainWindow", u"250", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Signal features", None))
         self.meanSignalLabel.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:700;\">Signal mean =</span> ????</p></body></html>", None))
         self.stdSignalLabel.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:700;\">Signal standard deviation =</span> ????</p></body></html>", None))
+        self.durationSignalLabel.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-weight:700;\">Signal total duration =</span> ????</p></body></html>", None))
         self.heightValue.setText("")
         self.widthValue.setText("")
         self.distanceLabel.setText(QCoreApplication.translate("MainWindow", u"distance", None))

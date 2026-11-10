@@ -8,6 +8,7 @@ Created on Fri Nov  7 13:41:33 2025
 import os
 
 import numpy as np
+from PySide6.QtGui import QIntValidator
 from PySide6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
 from scipy.signal import detrend, find_peaks
 
@@ -51,11 +52,54 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         # Connect sliders and spin boxes.
         self._connect_parameter_controls()
 
+        # Connect frame interval line edit (must be an integer).
+        self.frameIntervalLineEdit.setValidator(
+            QIntValidator(1, 1_000_000, self)
+        )
+        self.frameIntervalLineEdit.editingFinished.connect(
+            self.frameIntervalLineEdit.clearFocus
+        )
+
+        self.frameIntervalLineEdit.editingFinished.connect(
+            self._on_frame_interval_changed
+        )
+
         # Connect additional controls.
         self.setHeightPushButton.clicked.connect(self.set_height_value)
         self.detrendCheckBox.toggled.connect(self.plot_data)
         self.detrendComboBox.currentIndexChanged.connect(self.plot_data)
         self.prominenceCheckBox.toggled.connect(self.plot_data)
+
+    def _update_frame_count_label(self):
+        """Display the number of frames (rows) of the loaded data."""
+        if self.raw_data is None:
+            self.frameCountValue.setText("-")
+            return
+
+        self.frameCountValue.setText(f"{len(self.raw_data)}")
+        self.n_frames = len(self.raw_data)
+        self._update_signal_duration()
+
+    def _get_frame_interval(self):
+        """Return the frame interval as an int."""
+        return int(self.frameIntervalLineEdit.text())
+
+    def _on_frame_interval_changed(self):
+        """Recompute the total signal duration."""
+        self._update_signal_duration()
+
+        if self.prominenceCheckBox.isChecked():
+            self.plot_data()
+
+    def _update_signal_duration(self):
+        """Update duration label (number of frames x frame interval / 1000)."""
+        # Get signal duration and convert into seconds.
+        self.signal_duration = self._get_frame_interval() * self.n_frames
+        self.signal_duration /= 1000
+
+        self.durationSignalLabel.setText(
+            f"<b>Signal total duration =</b> {self.signal_duration} s"
+        )
 
     def _connect_parameter_controls(self):
         """Synchronize sliders and spin boxes."""
@@ -171,6 +215,9 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             f"<b>Loaded file:</b> {os.path.basename(path)}"
         )
 
+        # Display the number of detected frames (rows).
+        self._update_frame_count_label()
+
         # Update signal metrics.
         self.mean_signal = np.mean(signal)
         self.std_signal = np.std(signal)
@@ -181,6 +228,10 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         self.stdSignalLabel.setText(
             f"<b>Signal standard deviation =</b> {self.std_signal:.3f} "
             f"(exact value: {self.std_signal:.10f})"
+        )
+
+        self.durationSignalLabel.setText(
+            f"<b>Signal total duration =</b> {self.signal_duration} s"
         )
 
     def set_height_value(self):
@@ -262,7 +313,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
                 f"{np.std(properties['prominences']):.3g}"
             )
             self.frequenceLabel.setText(
-                f"Frequency = {len(top_peaks) / 150:.3g} Hz (s<sup>-1</sup>)"
+                f"Frequency = {len(top_peaks) / self.signal_duration:.3g} Hz "
+                f"(s<sup>-1</sup>) ({len(top_peaks)} ÷ {self.signal_duration})"
             )
         else:
             self.amplitudeLabel.setText("Mean amplitude = ???")
