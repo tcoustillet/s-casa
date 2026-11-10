@@ -239,6 +239,16 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             round(self.mean_signal + self.std_signal, 3)
         )
 
+    def _get_current_parameters(self):
+        """Return the current peak detection parameters as a dict."""
+        return {
+            "height": self.heightDoubleSpinBox.value(),
+            "threshold": self.thresholdDoubleSpinBox.value(),
+            "distance": self.distanceSpinBox.value(),
+            "prominence": self.prominenceDoubleSpinBox.value(),
+            "width": self.widthDoubleSpinBox.value(),
+        }
+
     def _get_signal(self):
         """Return the signal, detrended if requested (original mean kept)."""
         signal = self.raw_data["F/F0"].values
@@ -262,32 +272,21 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         """
 
         # Retrieve detection parameters.
-        height = self.heightDoubleSpinBox.value()
-        threshold = self.thresholdDoubleSpinBox.value()
-        distance = self.distanceSpinBox.value()
-        prominence = self.prominenceDoubleSpinBox.value()
-        width = self.widthDoubleSpinBox.value()
+        params = self._get_current_parameters()
 
-        self.heightValue.setText(f"{height:.3f}")
-        self.thresholdValue.setText(f"{threshold:.3f}")
-        self.distanceValue.setText(f"{distance}")
-        self.prominenceValue.setText(f"{prominence:.3f}")
-        self.widthValue.setText(f"{width:.3f}")
+        self.heightValue.setText(f"{params['height']:.3f}")
+        self.thresholdValue.setText(f"{params['threshold']:.3f}")
+        self.distanceValue.setText(f"{params['distance']}")
+        self.prominenceValue.setText(f"{params['prominence']:.3f}")
+        self.widthValue.setText(f"{params['width']:.3f}")
 
         if self.raw_data is None:
             return
 
         data = self._get_signal()
 
-        # Peak detection.
-        top_peaks, properties = find_peaks(
-            x=data,
-            height=height,
-            threshold=threshold,
-            distance=distance,
-            prominence=prominence,
-            width=width,
-        )
+        # Peak detection with the arguments stored in params.
+        top_peaks, properties = find_peaks(x=data, **params)
 
         # Display prominence if requested.
         show_prominence = self.prominenceCheckBox.isChecked()
@@ -297,12 +296,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             plotWidget=self.plotprocessedWidget,
             x=self.raw_data["Frame"].values,
             y=data,
-            height=height,
-            threshold=threshold,
-            distance=distance,
-            prominence=prominence,
-            width=width,
             show_prominence=show_prominence,
+            **params,
         )
 
         # Update amplitude and frequency labels.
