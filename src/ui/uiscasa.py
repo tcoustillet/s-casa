@@ -8,8 +8,14 @@ Created on Fri Nov  7 13:41:33 2025
 import os
 
 import numpy as np
+from PySide6.QtCore import QEvent
 from PySide6.QtGui import QIntValidator
-from PySide6.QtWidgets import QFileDialog, QMainWindow, QMessageBox
+from PySide6.QtWidgets import (
+    QApplication,
+    QFileDialog,
+    QMainWindow,
+    QMessageBox,
+)
 from scipy.signal import detrend, find_peaks
 
 from . import pandasmodel as pandasm
@@ -49,6 +55,9 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         # Enable drag and drop.
         self.setAcceptDrops(True)
 
+        # Handle line edit events.
+        QApplication.instance().installEventFilter(self)
+
         # Connect sliders and spin boxes.
         self._connect_parameter_controls()
 
@@ -70,6 +79,25 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         self.detrendComboBox.currentIndexChanged.connect(self.refresh)
         self.prominenceCheckBox.toggled.connect(self.refresh)
         self._update_parameter_labels()
+
+    def eventFilter(self, watched, event):
+        """Validate the frame interval when clicking outside the line edit.
+
+        Args:
+        -----
+            watched (QObject): The object receiving the event.
+            event (QEvent): The event.
+
+        Returns:
+            bool: Always False, so the event is still processed normally.
+        """
+        if (
+            event.type() == QEvent.MouseButtonPress
+            and self.frameIntervalLineEdit.hasFocus()
+            and watched is not self.frameIntervalLineEdit
+        ):
+            self.frameIntervalLineEdit.clearFocus()
+        return super().eventFilter(watched, event)
 
     def _update_frame_count_label(self):
         """Display the number of frames (rows) of the loaded data."""
