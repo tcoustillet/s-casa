@@ -88,9 +88,6 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         """Recompute the total signal duration."""
         self._update_signal_duration()
 
-        if self.prominenceCheckBox.isChecked():
-            self.plot_data()
-
     def _update_signal_duration(self):
         """Update duration label (number of frames x frame interval / 1000)."""
         # Get signal duration and convert into seconds.
@@ -242,6 +239,18 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             round(self.mean_signal + self.std_signal, 3)
         )
 
+    def _get_signal(self):
+        """Return the signal, detrended if requested (original mean kept)."""
+        signal = self.raw_data["F/F0"].values
+
+        if self.detrendCheckBox.isChecked():
+            data = detrend(signal, type=self.detrendComboBox.currentText())
+            # Preserve the original mean.
+            data += np.mean(signal)
+            return data
+
+        return signal
+
     def plot_data(self):
         """Detect peaks with the current parameters and plot the result.
 
@@ -268,16 +277,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         if self.raw_data is None:
             return
 
-        # Signal detrend.
-        if self.detrendCheckBox.isChecked():
-            data = detrend(
-                self.raw_data["F/F0"].values,
-                type=self.detrendComboBox.currentText(),
-            )
-            # Preserve the original mean.
-            data += np.mean(self.raw_data["F/F0"].values)
-        else:
-            data = self.raw_data["F/F0"].values
+        data = self._get_signal()
 
         # Peak detection.
         top_peaks, properties = find_peaks(
