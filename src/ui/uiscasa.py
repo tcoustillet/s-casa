@@ -319,25 +319,23 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         return signal
 
     def plot_data(self):
-        """Detect peaks with the current parameters and plot the result.
+        """Plot the (optionally detrended) signal with the current parameters.
 
         Reads the detection parameters (height, threshold, distance,
         prominence, width) from the spin boxes, optionally detrends the
-        signal, runs `scipy.signal.find_peaks` and updates the plot. The mean
-        amplitude (mean prominence ± standard deviation) and the frequency
-        labels are updated only if prominence display is enabled.
+        signal, and updates the plot. The mean amplitude (mean prominence ±
+        standard deviation) and the frequency labels are updated only if
+        prominence display is enabled.
         """
-
-        # Retrieve detection parameters.
-        params = self._get_current_parameters()
 
         if self.raw_data is None:
             return
 
-        data = self._get_signal()
+        # Retrieve detection parameters.
+        params = self._get_current_parameters()
 
-        # Peak detection with the arguments stored in params.
-        top_peaks, properties = find_peaks(x=data, **params)
+        # Get signal (detrended or not).
+        data = self._get_signal()
 
         # Display prominence if requested.
         show_prominence = self.prominenceCheckBox.isChecked()
