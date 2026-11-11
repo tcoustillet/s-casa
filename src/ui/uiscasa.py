@@ -284,6 +284,9 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             f"(exact value: {self.std_signal:.10f})"
         )
 
+        # Draw the new signal right away.
+        self.refresh()
+
     def set_height_value(self):
         """Set the height argument to the signal mean + standard deviation."""
         if self.mean_signal is None:
