@@ -33,6 +33,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         unprocessed_model (PandasModel): Table model displaying `raw_data`.
         mean_signal (float): Mean of the "F/F0" signal.
         std_signal (float): Standard deviation of the "F/F0" signal.
+        n_frames (int): Number of frames (rows) of the loaded data.
+        signal_duration (float): Total signal duration in seconds.
     """
 
     def __init__(self):
@@ -45,6 +47,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         self.unprocessed_model = None
         self.mean_signal = None
         self.std_signal = None
+        self.n_frames = 0
+        self.signal_duration = 0.0
 
         # Connect main buttons.
         self.browseButton.clicked.connect(self.open_raw_data)
@@ -111,7 +115,8 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
 
     def _get_frame_interval(self):
         """Return the frame interval as an int."""
-        return int(self.frameIntervalLineEdit.text())
+        text = self.frameIntervalLineEdit.text()
+        return int(text) if text else None
 
     def _on_frame_interval_changed(self):
         """Recompute the total signal duration."""
@@ -121,7 +126,17 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
     def _update_signal_duration(self):
         """Update duration label (number of frames x frame interval / 1000)."""
         # Get signal duration and convert into seconds.
-        self.signal_duration = self._get_frame_interval() * self.n_frames
+        interval = self._get_frame_interval()
+
+        if interval is None or self.n_frames == 0:
+            self.signal_duration = 0.0
+            self.durationSignalLabel.setText(
+                "<b>Signal total duration =</b> -"
+            )
+            return
+
+        # Convert milliseconds into seconds.
+        self.signal_duration = interval * self.n_frames
         self.signal_duration /= 1000
 
         self.durationSignalLabel.setText(
@@ -355,7 +370,11 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         )
         prominences = properties["prominences"]
 
-        if self.prominenceCheckBox.isChecked() and len(prominences) > 0:
+        if (
+            self.prominenceCheckBox.isChecked()
+            and len(prominences) > 0
+            and self.signal_duration > 0
+        ):
             self.amplitudeLabel.setText(
                 f"Mean amplitude = {np.mean(prominences):.3g} ± "
                 f"{np.std(prominences):.3g}"
