@@ -17,6 +17,13 @@ from . import pandasmodel as pandasm
 from . import plotmodel as plotm
 from .ui_scasaMainWindow import Ui_MainWindow
 
+# Sliders only handle integers: float parameters are multiplied by this
+# factor to be stored in a slider.
+SLIDER_SCALE = 1000
+
+# Number of milliseconds in one second.
+MS_PER_SECOND = 1000
+
 
 class ScasaMainWindow(QMainWindow, Ui_MainWindow):
     """Main window hosting the widgets and the slots of the application.
@@ -137,7 +144,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
 
         # Convert milliseconds into seconds.
         self.signal_duration = interval * self.n_frames
-        self.signal_duration /= 1000
+        self.signal_duration /= MS_PER_SECOND
 
         self.durationSignalLabel.setText(
             f"<b>Signal total duration =</b> {self.signal_duration} s"
@@ -147,10 +154,14 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         """Synchronize sliders, spin boxes and labels."""
 
         parameter_pairs = (
-            (self.heightSlider, self.heightDoubleSpinBox, 1000),
-            (self.thresholdSlider, self.thresholdDoubleSpinBox, 1000),
-            (self.prominenceSlider, self.prominenceDoubleSpinBox, 1000),
-            (self.widthSlider, self.widthDoubleSpinBox, 1000),
+            (self.heightSlider, self.heightDoubleSpinBox, SLIDER_SCALE),
+            (self.thresholdSlider, self.thresholdDoubleSpinBox, SLIDER_SCALE),
+            (
+                self.prominenceSlider,
+                self.prominenceDoubleSpinBox,
+                SLIDER_SCALE,
+            ),
+            (self.widthSlider, self.widthDoubleSpinBox, SLIDER_SCALE),
             (self.distanceSlider, self.distanceSpinBox, 1),
         )
 
@@ -246,7 +257,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             QMessageBox.critical(self, "Error", str(exc))
             return
 
-        signal = data["F/F0"].values
+        signal = data[pandasm.SIGNAL_COLUMN].values
 
         self.raw_data = data
         self.unprocessed_model = pandasm.PandasModel(self.raw_data)
@@ -316,7 +327,9 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             else None
         )
 
-        return sp.preprocess(self.raw_data["F/F0"].values, detrend_type)
+        return sp.preprocess(
+            self.raw_data[pandasm.SIGNAL_COLUMN].values, detrend_type
+        )
 
     def plot_data(self, signal):
         """Plot the signal and the peaks of the last detection.
@@ -328,7 +341,7 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         # Update plot.
         plotm.plot(
             plotWidget=self.plotprocessedWidget,
-            x=self.raw_data["Frame"].values,
+            x=self.raw_data[pandasm.FRAME_COLUMN].values,
             y=signal,
             peaks=self.peaks,
             prominences=self.prominences,

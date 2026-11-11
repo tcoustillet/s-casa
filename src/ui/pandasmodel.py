@@ -8,7 +8,10 @@ Created on Fri Nov  7 13:51:06 2025
 import pandas as pd
 from PySide6.QtCore import QAbstractTableModel, Qt
 
-REQUIRED_COLUMNS = ["Frame", "F/F0"]
+# Column names of the loaded data.
+FRAME_COLUMN = "Frame"
+SIGNAL_COLUMN = "F/F0"
+REQUIRED_COLUMNS = [FRAME_COLUMN, SIGNAL_COLUMN]
 
 
 class PandasModel(QAbstractTableModel):
