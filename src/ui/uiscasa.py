@@ -16,8 +16,8 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
 )
-from scipy.signal import detrend, find_peaks
 
+from .. import signal_processing as sp
 from . import pandasmodel as pandasm
 from . import plotmodel as plotm
 from .ui_scasaMainWindow import Ui_MainWindow
@@ -35,6 +35,9 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         std_signal (float): Standard deviation of the "F/F0" signal.
         n_frames (int): Number of frames (rows) of the loaded data.
         signal_duration (float): Total signal duration in seconds.
+        peaks (np.ndarray): Indices of the last detected peaks. None until
+            a refresh has been done on loaded data.
+        prominences (np.ndarray): Prominence of each peak in `peaks`.
     """
 
     def __init__(self):
@@ -49,6 +52,10 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         self.std_signal = None
         self.n_frames = 0
         self.signal_duration = 0.0
+
+        # Signal attributes
+        self.peaks = None
+        self.prominences = None
 
         # Connect main buttons.
         self.browseButton.clicked.connect(self.open_raw_data)
@@ -251,6 +258,9 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
         self.raw_data = data
         self.unprocessed_model = pandasm.PandasModel(self.raw_data)
 
+        self.peaks = None
+        self.prominences = None
+
         # Update table.
         self.tableView.setModel(self.unprocessed_model)
 
@@ -308,78 +318,65 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
 
     def _get_signal(self):
         """Return the signal, detrended if requested (original mean kept)."""
-        signal = self.raw_data["F/F0"].values
+        detrend_type = (
+            self.detrendComboBox.currentText()
+            if self.detrendCheckBox.isChecked()
+            else None
+        )
 
-        if self.detrendCheckBox.isChecked():
-            data = detrend(signal, type=self.detrendComboBox.currentText())
-            # Preserve the original mean.
-            data += np.mean(signal)
-            return data
+        return sp.preprocess(self.raw_data["F/F0"].values, detrend_type)
 
-        return signal
+    def plot_data(self, signal):
+        """Plot the signal and the peaks of the last detection.
 
-    def plot_data(self):
-        """Plot the (optionally detrended) signal with the current parameters.
-
-        Reads the detection parameters (height, threshold, distance,
-        prominence, width) from the spin boxes, optionally detrends the
-        signal, and updates the plot. The mean amplitude (mean prominence ±
-        standard deviation) and the frequency labels are updated only if
-        prominence display is enabled.
+        Args:
+        -----
+            signal (np.ndarray): Signal on which the peaks were detected.
         """
-
-        if self.raw_data is None:
-            return
-
-        # Retrieve detection parameters.
-        params = self._get_current_parameters()
-
-        # Get signal (detrended or not).
-        data = self._get_signal()
-
-        # Display prominence if requested.
-        show_prominence = self.prominenceCheckBox.isChecked()
-
         # Update plot.
         plotm.plot(
             plotWidget=self.plotprocessedWidget,
             x=self.raw_data["Frame"].values,
-            y=data,
-            show_prominence=show_prominence,
-            **params,
+            y=signal,
+            peaks=self.peaks,
+            prominences=self.prominences,
+            show_prominence=self.prominenceCheckBox.isChecked(),
         )
 
     def refresh(self):
-        """Update both the plot and the amplitude/frequency labels."""
-        self.plot_data()
+        """Detect peaks once, then update the plot and the labels."""
+        if self.raw_data is None:
+            return
+
+        signal = self._get_signal()
+
+        self.peaks, self.prominences = sp.detect_peaks(
+            signal, **self._get_current_parameters()
+        )
+
+        self.plot_data(signal)
         self.update_signal_statistics()
 
     def update_signal_statistics(self):
         """Update the mean amplitude and frequency labels.
 
         Values are only displayed if prominence display is enabled and at
-        least one peak was detected.
+        least one peak was detected and the signal duration is known.
         """
-        if self.raw_data is None:
-            return
-
-        top_peaks, properties = find_peaks(
-            x=self._get_signal(), **self._get_current_parameters()
-        )
-        prominences = properties["prominences"]
+        n_peaks = 0 if self.peaks is None else len(self.peaks)
 
         if (
             self.prominenceCheckBox.isChecked()
-            and len(prominences) > 0
+            and n_peaks > 0
             and self.signal_duration > 0
         ):
             self.amplitudeLabel.setText(
-                f"Mean amplitude = {np.mean(prominences):.3g} ± "
-                f"{np.std(prominences):.3g}"
+                f"Mean amplitude = {np.mean(self.prominences):.3g} ± "
+                f"{np.std(self.prominences):.3g}"
             )
             self.frequenceLabel.setText(
-                f"Frequency = {len(top_peaks) / self.signal_duration:.3g} Hz "
-                f"(s<sup>-1</sup>) ({len(top_peaks)} ÷ {self.signal_duration})"
+                f"Frequency = {n_peaks / self.signal_duration:.3g} Hz "
+                f"(s<sup>-1</sup>) ({n_peaks} ÷ {self.signal_duration})"
             )
         else:
             self.amplitudeLabel.setText("Mean amplitude = ???")
