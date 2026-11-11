@@ -284,10 +284,6 @@ class ScasaMainWindow(QMainWindow, Ui_MainWindow):
             f"(exact value: {self.std_signal:.10f})"
         )
 
-        self.durationSignalLabel.setText(
-            f"<b>Signal total duration =</b> {self.signal_duration} s"
-        )
-
     def set_height_value(self):
         """Set the height argument to the signal mean + standard deviation."""
         if self.mean_signal is None:
